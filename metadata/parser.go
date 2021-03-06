@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 
 	"go.starlark.net/starlark"
@@ -51,6 +52,7 @@ func (p *Parser) ParseOne(file MetadataFile) (ParseResult, error) {
 	return ParseResult{
 		file:    file,
 		entries: globalMetadataStore.get(file.pathRelativeToRoot),
+		//entries: globalMetadataStore.get(file.pathRelativeToRoot),
 	}, nil
 }
 
@@ -60,9 +62,9 @@ func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.S
 	}
 
 	// strip leading "//"
-	filepath := module[2:]
+	path := module[2:]
 
-	result, ok := p.cache[filepath]
+	result, ok := p.cache[path]
 	if result != nil {
 		return result.globals, result.err
 	}
@@ -75,14 +77,18 @@ func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.S
 
 	// Start actually loading the module. Mark that load is in progress by adding
 	// nil to the cache
-	p.cache[filepath] = nil
+	p.cache[path] = nil
 
-	fileContents, err := p.repo.ReadFile(filepath)
+	fileContents, err := p.repo.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	threadName := filepath
+	threadName := path // filepath.Dir(path)
+	// if threadName == "." {
+	// 	threadName = ""
+	// }
+
 	thread := &starlark.Thread{
 		Name: threadName,
 		Load: p.starlarkLoadFunc,
@@ -95,7 +101,7 @@ func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.S
 	globals, execErr := starlark.ExecFile(thread, threadName, fileContents, predeclared)
 	result = &execFileResult{globals, execErr}
 
-	p.cache[filepath] = result
+	p.cache[path] = result
 
 	return result.globals, result.err
 }
@@ -104,14 +110,42 @@ func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args s
 
 	var key string
 	var value starlark.Value
-	if err := starlark.UnpackArgs(b.Name(), args, kwargs, "key", &key, "value", &value); err != nil {
+	var filesArg starlark.Value
+	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
+		"key", &key,
+		"value", &value,
+		"files?", &filesArg,
+	); err != nil {
 		//TODO: Add some way to show the file name in this error?
 		return nil, err
 	}
 
+	var files []string
+	if filesArg != nil {
+		if filesArg.Type() != "list" {
+			return nil, errors.New("files must be of list type")
+		}
+
+		asList := filesArg.(*starlark.List)
+		files = make([]string, asList.Len())
+		for i := 0; i < asList.Len(); i++ {
+			val := asList.Index(i)
+			if val.Type() != "string" {
+				return nil, errors.New("Only string types are allowed for the files arg")
+			}
+			// TODO: this is a bit sloppy to get the full path to the file
+			// relative to the current metadata file.
+			// There be dragons if:
+			//   1. Someone `load`s another METADATA file
+			//   2. we have lots of file patterns, this will use lots of memory
+			files[i] = filepath.Join(thread.Name, val.(starlark.String).GoString())
+		}
+	}
+
 	entry := Entry{
-		key:   key,
-		value: value,
+		key:                key,
+		value:              value,
+		filesThisAppliesTo: files,
 	}
 
 	globalMetadataStore.addEntry(thread.Name, entry)

@@ -64,3 +64,19 @@ func TestImportMetadataTree(t *testing.T) {
 		})
 	}
 }
+
+func TestFileListMetadataTree(t *testing.T) {
+	fullPath := "../test_data/limit_with_file_list"
+	tree, err := TreeFromDir(fullPath, "METADATA")
+	if err != nil {
+		require.NoError(t, err, "Unexpected error")
+	}
+
+	value, err := tree.GetClosestValue("main.py", "minimum_coverage")
+	require.NoError(t, err)
+	assert.Equal(t, value, starlark.MakeInt(90))
+
+	value, err = tree.GetClosestValue("other.py", "minimum_coverage")
+	assert.Nil(t, value)
+	assert.Error(t, err)
+}

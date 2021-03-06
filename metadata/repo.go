@@ -70,10 +70,18 @@ func (f *MetadataFile) Contents() (string, error) {
 }
 
 func (f *MetadataFile) Dirs() []string {
-	dir := filepath.Dir(f.pathRelativeToRoot)
-	if dir == "." {
+	dir := f.Dir()
+	if dir == "" {
 		return []string{}
 	}
 
 	return strings.Split(dir, string(filepath.Separator))
+}
+
+func (f *MetadataFile) Dir() string {
+	d := filepath.Dir(f.pathRelativeToRoot)
+	if d == "." {
+		d = ""
+	}
+	return d
 }

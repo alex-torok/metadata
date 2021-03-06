@@ -1,0 +1,5 @@
+metadata(
+  key="minimum_coverage",
+  value=90,
+  files=["main.py"]
+  )
