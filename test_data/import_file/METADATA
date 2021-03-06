@@ -1,0 +1,3 @@
+load("//one/my_func.meta", "declare_meta", "value")
+
+declare_meta(value)

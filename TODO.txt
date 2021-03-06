@@ -5,3 +5,4 @@
 * Specifying files/patterns that metadata applies to
 * In meta builder function, the merge function could have a "takeMostSpecificButMergeOthersWith"
 * Store file/line number definitions for where metadata values are defined in the Entry
+* When defining custom metadata, define the type of the value

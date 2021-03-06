@@ -1,6 +1,9 @@
 package metadata
 
 import (
+	"errors"
+	"strings"
+
 	"go.starlark.net/starlark"
 )
 
@@ -9,10 +12,27 @@ type ParseResult struct {
 	entries []Entry
 }
 
-func ParseAll(files []MetadataFile) ([]ParseResult, error) {
+type execFileResult struct {
+	globals starlark.StringDict
+	err     error
+}
+
+type Parser struct {
+	cache map[string]*execFileResult
+	repo  *Repo
+}
+
+func NewParser(repo *Repo) Parser {
+	return Parser{
+		cache: make(map[string]*execFileResult),
+		repo:  repo,
+	}
+}
+
+func (p *Parser) ParseAll(files []MetadataFile) ([]ParseResult, error) {
 	parsed := make([]ParseResult, 0)
 	for _, file := range files {
-		p, err := ParseOne(file)
+		p, err := p.ParseOne(file)
 		if err != nil {
 			return parsed, err
 		}
@@ -21,28 +41,63 @@ func ParseAll(files []MetadataFile) ([]ParseResult, error) {
 	return parsed, nil
 }
 
-func ParseOne(file MetadataFile) (ParseResult, error) {
-	fileContents, err := file.Contents()
-	if err != nil {
-		return ParseResult{}, err
+func (p *Parser) ParseOne(file MetadataFile) (ParseResult, error) {
+
+	_, execErr := p.starlarkLoadFunc(nil, "//"+file.pathRelativeToRoot)
+	if execErr != nil {
+		return ParseResult{}, execErr
 	}
 
-	threadName := file.path
-	thread := &starlark.Thread{Name: threadName}
+	return ParseResult{
+		file:    file,
+		entries: globalMetadataStore.get(file.pathRelativeToRoot),
+	}, nil
+}
+
+func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.StringDict, error) {
+	if !strings.HasPrefix(module, "//") {
+		return nil, errors.New("Cannot load module that does not start with '//'")
+	}
+
+	// strip leading "//"
+	filepath := module[2:]
+
+	result, ok := p.cache[filepath]
+	if result != nil {
+		return result.globals, result.err
+	}
+
+	// If result is nil, and it was put in the cache, then we've already started trying
+	// to load this file.
+	if ok {
+		return nil, errors.New("Cycle detected in load graph")
+	}
+
+	// Start actually loading the module. Mark that load is in progress by adding
+	// nil to the cache
+	p.cache[filepath] = nil
+
+	fileContents, err := p.repo.ReadFile(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	threadName := filepath
+	thread := &starlark.Thread{
+		Name: threadName,
+		Load: p.starlarkLoadFunc,
+	}
 
 	predeclared := starlark.StringDict{
 		"metadata": starlark.NewBuiltin("metadata", metadata_starlark_func),
 	}
 
-	_, execErr := starlark.ExecFile(thread, file.path, fileContents, predeclared)
-	if execErr != nil {
-		return ParseResult{}, err
-	}
+	globals, execErr := starlark.ExecFile(thread, threadName, fileContents, predeclared)
+	result = &execFileResult{globals, execErr}
 
-	return ParseResult{
-		file:    file,
-		entries: globalMetadataStore.get(threadName),
-	}, nil
+	p.cache[filepath] = result
+
+	return result.globals, result.err
 }
 
 func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {

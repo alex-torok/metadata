@@ -8,7 +8,6 @@ import (
 )
 
 func TestSimpleMetadataTree(t *testing.T) {
-	// TODO: Add test cases.
 	fullPath := "../test_data/simple_test_case"
 	tree, err := TreeFromDir(fullPath, "METADATA")
 	if err != nil {
@@ -40,5 +39,31 @@ func TestSimpleMetadataTree(t *testing.T) {
 			assert.Equal(t, value, tt.expected)
 		})
 	}
+}
 
+func TestImportMetadataTree(t *testing.T) {
+	fullPath := "../test_data/import_file"
+	tree, err := TreeFromDir(fullPath, "METADATA")
+	if err != nil {
+		require.NoError(t, err, "Unexpected error")
+	}
+
+	var value int
+
+	tests := []struct {
+		path     string
+		key      string
+		expected int
+	}{
+		// from root METADATA file via imported funciton
+		{"someFile.txt", "minimum_coverage", 90},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.path+":"+tt.key, func(t *testing.T) {
+			value, err = tree.GetClosestValue(tt.path, tt.key)
+			require.NoError(t, err)
+			assert.Equal(t, value, tt.expected)
+		})
+	}
 }

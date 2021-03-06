@@ -17,7 +17,8 @@ func TreeFromDir(root, metadataFilename string) (*MetadataTree, error) {
 		return nil, err
 	}
 
-	parsed, err := ParseAll(files)
+	parser := NewParser(&r)
+	parsed, err := parser.ParseAll(files)
 	if err != nil {
 		return nil, err
 	}

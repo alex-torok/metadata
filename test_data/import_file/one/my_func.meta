@@ -1,0 +1,4 @@
+def declare_meta(v):
+    metadata(key="minimum_coverage", value=v)
+
+value = 90

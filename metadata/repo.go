@@ -37,6 +37,15 @@ func (r *Repo) MetadataFiles() ([]MetadataFile, error) {
 	return files, err
 }
 
+func (r *Repo) ReadFile(pathRelativeToRoot string) (string, error) {
+	fullPath := filepath.Join(r.Root, pathRelativeToRoot)
+	content, err := ioutil.ReadFile(fullPath)
+	if err != nil {
+		return "", fmt.Errorf("Could not get contents of %s: %v", fullPath, err)
+	}
+	return string(content), nil
+}
+
 func (r *Repo) newFile(fullPath string) (MetadataFile, error) {
 	relativePath, err := filepath.Rel(r.Root, fullPath)
 	if err != nil {
@@ -57,11 +66,7 @@ type MetadataFile struct {
 }
 
 func (f *MetadataFile) Contents() (string, error) {
-	content, err := ioutil.ReadFile(f.path)
-	if err != nil {
-		return "", fmt.Errorf("Could not get contents of %s: %v", f.path, err)
-	}
-	return string(content), nil
+	return f.repo.ReadFile(f.pathRelativeToRoot)
 }
 
 func (f *MetadataFile) Dirs() []string {
