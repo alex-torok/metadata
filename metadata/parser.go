@@ -1,8 +1,6 @@
 package metadata
 
 import (
-	"fmt"
-
 	"go.starlark.net/starlark"
 )
 
@@ -56,7 +54,6 @@ func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args s
 		return nil, err
 	}
 
-	fmt.Printf("metadata called with key=%s, value=%d\n", key, value)
 	entry := Entry{
 		key:   key,
 		value: value,

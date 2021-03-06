@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 
 	"metadata/metadata"
-
-	"github.com/kr/pretty"
 )
 
 func main() {
@@ -22,21 +20,22 @@ func main() {
 	}
 
 	files, _ := r.MetadataFiles()
-	for _, f := range files {
-		fmt.Printf("%+v\n", f)
-	}
-
 	parsed, err := metadata.ParseAll(files)
+
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		os.Exit(1)
 	}
 
 	tree := metadata.NewMetadataTree(parsed)
-	pretty.Println(tree)
-	pretty.Println(tree.GetClosestValue("someFile.txt", "cool factor"))
-	pretty.Println(tree.GetClosestValue("one/other/someFile.txt", "cool factor"))
 
-	pretty.Println(tree.GetClosestValue("someFile.txt", "minimum_coverage"))
-	pretty.Println(tree.GetClosestValue("one/other/someFile.txt", "minimum_coverage"))
+	p := func(path string, key string) {
+		val, _ := tree.GetClosestValue(path, key)
+		fmt.Printf("%s (%s): %d\n", key, path, val)
+	}
+	p("someFile.txt", "cool factor")
+	p("one/other/someFile.txt", "cool factor")
+
+	p("someFile.txt", "minimum_coverage")
+	p("one/other/someFile.txt", "minimum_coverage")
 }
