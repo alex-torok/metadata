@@ -120,25 +120,9 @@ func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args s
 		return nil, err
 	}
 
-	fileMatchSet := make(StringSet)
-	if filesArg != nil {
-		if filesArg.Type() != "list" {
-			return nil, errors.New("files must be of list type")
-		}
-
-		asList := filesArg.(*starlark.List)
-		for i := 0; i < asList.Len(); i++ {
-			val := asList.Index(i)
-			if val.Type() != "string" {
-				return nil, errors.New("Only string types are allowed for the files arg")
-			}
-			// TODO: this is a bit sloppy to get the full path to the file
-			// relative to the current metadata file.
-			// There be dragons if:
-			//   1. Someone `load`s another METADATA file
-			//   2. we have lots of file patterns, this will use lots of memory
-			fileMatchSet.Add(filepath.Join(thread.Name, val.(starlark.String).GoString()))
-		}
+	fileMatchSet, err := handleFilesArg(filesArg, dirOfRelativePath(thread.Name))
+	if err != nil {
+		return nil, err
 	}
 
 	entry := Entry{
@@ -158,6 +142,32 @@ func init() {
 	globalMetadataStore = metadataStore{
 		store: make(map[string][]Entry),
 	}
+}
+
+func handleFilesArg(filesArg starlark.Value, relativeDir string) (StringSet, error) {
+	fileMatchSet := make(StringSet)
+	if filesArg != nil {
+		if filesArg.Type() != "list" {
+			return nil, errors.New("files must be of list type")
+		}
+
+		asList := filesArg.(*starlark.List)
+		for i := 0; i < asList.Len(); i++ {
+			val := asList.Index(i)
+			if val.Type() != "string" {
+				return nil, errors.New("Only string types are allowed for the files arg")
+			}
+			// TODO: ban relative pathing up like ./../some_other
+
+			// TODO: this is a bit sloppy to get the full path to the file
+			// relative to the current metadata file.
+			// There be dragons if:
+			//   1. Someone `load`s another METADATA file
+			//   2. we have lots of file patterns, this will use lots of memory
+			fileMatchSet.Add(filepath.Join(relativeDir, val.(starlark.String).GoString()))
+		}
+	}
+	return fileMatchSet, nil
 }
 
 //TODO: Make thread safe

@@ -79,7 +79,11 @@ func (f *MetadataFile) Dirs() []string {
 }
 
 func (f *MetadataFile) Dir() string {
-	d := filepath.Dir(f.pathRelativeToRoot)
+	return dirOfRelativePath(f.pathRelativeToRoot)
+}
+
+func dirOfRelativePath(s string) string {
+	d := filepath.Dir(s)
 	if d == "." {
 		d = ""
 	}

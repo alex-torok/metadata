@@ -18,5 +18,7 @@ type Entry struct {
 	value starlark.Value
 
 	// files that this metadata entry applies to. If empty, apply to all files
+	// this contains the full path relative to the root of the repo of any files
+	// that match
 	fileMatchSet StringSet
 }
