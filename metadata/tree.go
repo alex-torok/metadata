@@ -6,6 +6,25 @@ import (
 	"strings"
 )
 
+func TreeFromDir(root, metadataFilename string) (*MetadataTree, error) {
+	r := Repo{
+		Root:             root,
+		MetadataFilename: metadataFilename,
+	}
+
+	files, err := r.MetadataFiles()
+	if err != nil {
+		return nil, err
+	}
+
+	parsed, err := ParseAll(files)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewMetadataTree(parsed), nil
+}
+
 type MetadataTree struct {
 	subTrees map[string]*MetadataTree
 	entries  []Entry
