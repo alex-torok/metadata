@@ -1,0 +1,2 @@
+def minimum_coverage(v):
+    metadata(key="minimum_coverage", value=v)
