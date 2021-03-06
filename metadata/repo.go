@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 )
 
 type Repo struct {
@@ -66,8 +67,8 @@ func (f *MetadataFile) Contents() (string, error) {
 func (f *MetadataFile) Dirs() []string {
 	dir := filepath.Dir(f.pathRelativeToRoot)
 	if dir == "." {
-		dir = ""
+		return []string{}
 	}
 
-	return filepath.SplitList(dir)
+	return strings.Split(dir, string(filepath.Separator))
 }

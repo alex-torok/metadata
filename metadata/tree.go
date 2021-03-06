@@ -1,11 +1,54 @@
 package metadata
 
+import (
+	"fmt"
+	"path/filepath"
+	"strings"
+)
+
 type MetadataTree struct {
 	subTrees map[string]*MetadataTree
 	entries  []Entry
+	entryMap map[string]Entry
 }
 
-func (m MetadataTree) get(dirName string) *MetadataTree {
+type NoMetadataFoundError struct {
+	path string
+	key  string
+}
+
+func (e NoMetadataFoundError) Error() string {
+	return fmt.Sprintf("No '%s' metadata found for '%s'", e.key, e.path)
+}
+
+func (m *MetadataTree) GetClosestValue(filePath string, metadataKey string) (int, error) {
+	stack := m.getMetadataStack(filePath, metadataKey)
+	if len(stack) == 0 {
+		return 0, NoMetadataFoundError{filePath, metadataKey}
+	}
+	return stack[len(stack)-1].value, nil
+
+}
+
+func (m *MetadataTree) getMetadataStack(filePath string, metadataKey string) []Entry {
+	stack := make([]Entry, 0)
+
+	currentTree := m
+	for _, dirPart := range strings.Split(filePath, string(filepath.Separator)) {
+		if val, ok := currentTree.entryMap[metadataKey]; ok {
+			stack = append(stack, val)
+		}
+		var nextSubtreeExists bool
+		currentTree, nextSubtreeExists = currentTree.subTrees[dirPart]
+		if !nextSubtreeExists {
+			break
+		}
+	}
+
+	return stack
+}
+
+func (m *MetadataTree) get(dirName string) *MetadataTree {
 	subTree, exists := m.subTrees[dirName]
 	if !exists {
 		subTree = newTree()
@@ -18,6 +61,7 @@ func newTree() *MetadataTree {
 	return &MetadataTree{
 		subTrees: make(map[string]*MetadataTree),
 		entries:  make([]Entry, 0),
+		entryMap: make(map[string]Entry),
 	}
 }
 
@@ -35,6 +79,10 @@ func NewMetadataTree(results []ParseResult) *MetadataTree {
 	for _, result := range results {
 		tree := getTree(rootTree, result)
 		tree.entries = result.entries
+		for _, entry := range tree.entries {
+			//TODO: This overwrites any duplicated metadata entry key. Implement horizontal flattening.
+			tree.entryMap[entry.key] = entry
+		}
 	}
 
 	return rootTree

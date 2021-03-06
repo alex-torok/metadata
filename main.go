@@ -33,6 +33,10 @@ func main() {
 	}
 
 	tree := metadata.NewMetadataTree(parsed)
-	pretty.Print(tree)
+	pretty.Println(tree)
+	pretty.Println(tree.GetClosestValue("someFile.txt", "cool factor"))
+	pretty.Println(tree.GetClosestValue("one/other/someFile.txt", "cool factor"))
 
+	pretty.Println(tree.GetClosestValue("someFile.txt", "minimum_coverage"))
+	pretty.Println(tree.GetClosestValue("one/other/someFile.txt", "minimum_coverage"))
 }
