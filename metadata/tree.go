@@ -61,7 +61,9 @@ func (m *MetadataTree) getMetadataStack(filePath string, metadataKey string) []E
 	currentTree := m
 	for _, dirPart := range strings.Split(filePath, string(filepath.Separator)) {
 		if val, ok := currentTree.entryMap[metadataKey]; ok {
-			stack = append(stack, val)
+			if len(val.fileMatchSet) == 0 || val.fileMatchSet.Contains(filePath) {
+				stack = append(stack, val)
+			}
 		}
 		var nextSubtreeExists bool
 		currentTree, nextSubtreeExists = currentTree.subTrees[dirPart]

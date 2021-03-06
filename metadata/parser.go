@@ -120,14 +120,13 @@ func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args s
 		return nil, err
 	}
 
-	var files []string
+	fileMatchSet := make(StringSet)
 	if filesArg != nil {
 		if filesArg.Type() != "list" {
 			return nil, errors.New("files must be of list type")
 		}
 
 		asList := filesArg.(*starlark.List)
-		files = make([]string, asList.Len())
 		for i := 0; i < asList.Len(); i++ {
 			val := asList.Index(i)
 			if val.Type() != "string" {
@@ -138,14 +137,14 @@ func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args s
 			// There be dragons if:
 			//   1. Someone `load`s another METADATA file
 			//   2. we have lots of file patterns, this will use lots of memory
-			files[i] = filepath.Join(thread.Name, val.(starlark.String).GoString())
+			fileMatchSet.Add(filepath.Join(thread.Name, val.(starlark.String).GoString()))
 		}
 	}
 
 	entry := Entry{
-		key:                key,
-		value:              value,
-		filesThisAppliesTo: files,
+		key:          key,
+		value:        value,
+		fileMatchSet: fileMatchSet,
 	}
 
 	globalMetadataStore.addEntry(thread.Name, entry)
