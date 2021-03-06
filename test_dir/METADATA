@@ -1,2 +1,2 @@
-squares = [x*x for x in range(10)]
-print("loaded root meta")
+metadata(key="minimum_coverage", value=80)
+metadata(key="cool factor", value=9001)

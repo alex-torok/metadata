@@ -23,4 +23,12 @@ func main() {
 	for _, f := range files {
 		fmt.Printf("%+v\n", f)
 	}
+
+	parsed, err := metadata.ParseAll(files)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("%+v\n", parsed)
 }

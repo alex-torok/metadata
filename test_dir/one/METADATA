@@ -1,2 +1,1 @@
-doubles = [x+x for x in range(10)]
-print("loaded one dir meta")
+metadata(key="minimum_coverage", value=90)

@@ -1,7 +1,9 @@
 package metadata
 
 import (
+	"fmt"
 	"io/fs"
+	"io/ioutil"
 	"path/filepath"
 )
 
@@ -40,6 +42,7 @@ func (r *Repo) newFile(fullPath string) (MetadataFile, error) {
 		return MetadataFile{}, err
 	}
 	return MetadataFile{
+		path:               fullPath,
 		pathRelativeToRoot: relativePath,
 		repo:               r,
 	}, nil
@@ -47,6 +50,15 @@ func (r *Repo) newFile(fullPath string) (MetadataFile, error) {
 }
 
 type MetadataFile struct {
+	path               string
 	pathRelativeToRoot string
 	repo               *Repo
+}
+
+func (f *MetadataFile) Contents() (string, error) {
+	content, err := ioutil.ReadFile(f.path)
+	if err != nil {
+		return "", fmt.Errorf("Could not get contents of %s: %v", f.path, err)
+	}
+	return string(content), nil
 }
