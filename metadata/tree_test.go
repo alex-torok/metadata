@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.starlark.net/starlark"
 )
 
 func TestSimpleMetadataTree(t *testing.T) {
@@ -13,8 +14,6 @@ func TestSimpleMetadataTree(t *testing.T) {
 	if err != nil {
 		require.NoError(t, err, "Unexpected error")
 	}
-
-	var value int
 
 	tests := []struct {
 		path     string
@@ -34,9 +33,9 @@ func TestSimpleMetadataTree(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.path+":"+tt.key, func(t *testing.T) {
-			value, err = tree.GetClosestValue(tt.path, tt.key)
+			value, err := tree.GetClosestValue(tt.path, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, value, tt.expected)
+			assert.Equal(t, value, starlark.MakeInt(tt.expected))
 		})
 	}
 }
@@ -47,8 +46,6 @@ func TestImportMetadataTree(t *testing.T) {
 	if err != nil {
 		require.NoError(t, err, "Unexpected error")
 	}
-
-	var value int
 
 	tests := []struct {
 		path     string
@@ -61,9 +58,9 @@ func TestImportMetadataTree(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.path+":"+tt.key, func(t *testing.T) {
-			value, err = tree.GetClosestValue(tt.path, tt.key)
+			value, err := tree.GetClosestValue(tt.path, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, value, tt.expected)
+			assert.Equal(t, value, starlark.MakeInt(tt.expected))
 		})
 	}
 }

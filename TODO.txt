@@ -1,7 +1,8 @@
-* Implement the meta generator to support adding common functions like "minimum_coverage" or "cool_factor" that can be imported to define metadata for those
 * Implement generic metadata values
-* Implement CLI interface for pulling metadata values out in json
 * Specifying files/patterns that metadata applies to
+
+* Implement the meta generator to support adding common functions like "minimum_coverage" or "cool_factor" that can be imported to define metadata for those
+* Implement CLI interface for pulling metadata values out in json
 * In meta builder function, the merge function could have a "takeMostSpecificButMergeOthersWith"
 * Store file/line number definitions for where metadata values are defined in the Entry
 * When defining custom metadata, define the type of the value
