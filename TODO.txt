@@ -1,5 +1,5 @@
-* Implement generic metadata values
-* Specifying files/patterns that metadata applies to
+* Specifying files that metdata applies to
+* Specifying blob patterns that metdata applies to
 
 * Implement the meta generator to support adding common functions like "minimum_coverage" or "cool_factor" that can be imported to define metadata for those
 * Implement CLI interface for pulling metadata values out in json

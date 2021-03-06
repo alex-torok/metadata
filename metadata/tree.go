@@ -28,6 +28,9 @@ func TreeFromDir(root, metadataFilename string) (*MetadataTree, error) {
 	return NewMetadataTree(parsed), nil
 }
 
+// MetadataTree is a tree matching the structure of the filesystem in a repo,
+// where the entries in a tree are the metadata entries located in that folder's
+// METADATA file
 type MetadataTree struct {
 	subTrees map[string]*MetadataTree
 	entries  []Entry
