@@ -1,0 +1,5 @@
+* Wrap initialization of the Tree that is currently in main.go in some other object
+* Duplicate our test data dir into a simple_test_data dir, and write a test that asserts correct metadata values at the Tree interface
+* Implement serial loading with import (and a simpler cycle checker)
+* Implement the meta generator to support adding common functions like "minimum_coverage" or "cool_factor" that can be imported to define metadata for those
+* Implement generic metadata values
