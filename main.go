@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 
 	"metadata/metadata"
+
+	"github.com/kr/pretty"
 )
 
 func main() {
@@ -30,5 +32,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("%+v\n", parsed)
+	tree := metadata.NewMetadataTree(parsed)
+	pretty.Print(tree)
+
 }

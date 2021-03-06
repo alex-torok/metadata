@@ -6,8 +6,13 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func ParseAll(files []MetadataFile) ([]ParsedMetadataFile, error) {
-	parsed := make([]ParsedMetadataFile, 0)
+type ParseResult struct {
+	file    MetadataFile
+	entries []Entry
+}
+
+func ParseAll(files []MetadataFile) ([]ParseResult, error) {
+	parsed := make([]ParseResult, 0)
 	for _, file := range files {
 		p, err := ParseOne(file)
 		if err != nil {
@@ -18,13 +23,14 @@ func ParseAll(files []MetadataFile) ([]ParsedMetadataFile, error) {
 	return parsed, nil
 }
 
-func ParseOne(file MetadataFile) (ParsedMetadataFile, error) {
+func ParseOne(file MetadataFile) (ParseResult, error) {
 	fileContents, err := file.Contents()
 	if err != nil {
-		return ParsedMetadataFile{}, err
+		return ParseResult{}, err
 	}
 
-	thread := &starlark.Thread{Name: file.path}
+	threadName := file.path
+	thread := &starlark.Thread{Name: threadName}
 
 	predeclared := starlark.StringDict{
 		"metadata": starlark.NewBuiltin("metadata", metadata_starlark_func),
@@ -32,20 +38,16 @@ func ParseOne(file MetadataFile) (ParsedMetadataFile, error) {
 
 	_, execErr := starlark.ExecFile(thread, file.path, fileContents, predeclared)
 	if execErr != nil {
-		return ParsedMetadataFile{}, err
+		return ParseResult{}, err
 	}
 
-	return ParsedMetadataFile{
-		entries: globalMetadataStore.get(file.path),
+	return ParseResult{
+		file:    file,
+		entries: globalMetadataStore.get(threadName),
 	}, nil
 }
 
 func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	fileBeingParsed := thread.Name
-	// frame := thread.CallFrame(1)
-
-	// pos := frame.Pos
-	// fmt.Printf("metadata called from %d:%d %s\n", pos.Line, pos.Col, frame.Name)
 
 	var key string
 	var value int
@@ -60,7 +62,7 @@ func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args s
 		value: value,
 	}
 
-	globalMetadataStore.addEntry(fileBeingParsed, entry)
+	globalMetadataStore.addEntry(thread.Name, entry)
 
 	return starlark.None, nil
 }
