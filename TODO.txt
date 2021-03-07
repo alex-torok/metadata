@@ -1,5 +1,9 @@
-* Specifying files that metdata applies to
 * Specifying blob patterns that metdata applies to
+
+* Ban calling `load` on a METADATA file
+* Clean up global cache to be in the parser
+* Ban defining metadata in a loaded module (maybe implement a load stack?)
+* Better abstraction for "what METADATA file am I in"
 
 * Implement the meta generator to support adding common functions like "minimum_coverage" or "cool_factor" that can be imported to define metadata for those. It will handle creating a function with the boilerplate handling of file include lists/patterns
 * Implement CLI interface for pulling metadata values out in json
