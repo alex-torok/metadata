@@ -82,7 +82,7 @@ func TestGlob_ErrorConditions(t *testing.T) {
 	_, err := NewGlob("a**/*.txt")
 	require.Error(t, err)
 
-	_, err = NewGlob("a**/***txt")
+	_, err = NewGlob("*/**a/*txt")
 	require.Error(t, err)
 
 	_, err = NewGlob("**")

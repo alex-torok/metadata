@@ -73,11 +73,11 @@ func checkDoubleStarViolations(components []string) error {
 		}
 
 		if !isFirst && !strings.HasPrefix(c, "/") {
-			return errors.New("Invalid ** component - must be standalone")
+			return errors.New("Invalid ** component - must be at start, end, or between path separators (/**/)")
 		}
 
 		if !isLast && !strings.HasSuffix(c, "/") {
-			return errors.New("Invalid ** component - must be standalone")
+			return errors.New("Invalid ** component - must be at start, end, or between path separators (/**/)")
 		}
 	}
 	return nil
