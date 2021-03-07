@@ -74,3 +74,33 @@ func TestGlob_MatchTwoStar(t *testing.T) {
 		})
 	}
 }
+
+func TestGlob_ErrorConditions(t *testing.T) {
+	type args struct {
+		str string
+	}
+	_, err := NewGlob("a**/*.txt")
+	require.Error(t, err)
+
+	_, err = NewGlob("a**/***txt")
+	require.Error(t, err)
+
+	_, err = NewGlob("**")
+	require.NoError(t, err)
+
+	_, err = NewGlob("dir/**")
+	require.NoError(t, err)
+}
+
+func BenchmarkGlobConstruction(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		NewGlob("**/some_dir/*/file.txt")
+	}
+}
+func BenchmarkGlobMatching(b *testing.B) {
+	g, _ := NewGlob("**/some_dir/*/file.txt")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.Match("this/is/some_dir/other/file.py")
+	}
+}
