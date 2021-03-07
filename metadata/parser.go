@@ -96,6 +96,7 @@ func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.S
 
 	predeclared := starlark.StringDict{
 		"metadata": starlark.NewBuiltin("metadata", metadata_starlark_func),
+		"glob":     starlark.NewBuiltin("glob", glob_starlark_func),
 	}
 
 	globals, execErr := starlark.ExecFile(thread, threadName, fileContents, predeclared)
@@ -104,6 +105,24 @@ func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.S
 	p.cache[path] = result
 
 	return result.globals, result.err
+}
+
+func glob_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+
+	var pattern string
+	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
+		"pattern", &pattern,
+	); err != nil {
+		//TODO: Add some way to show the file name in this error?
+		return nil, err
+	}
+
+	glob, err := NewGlob(pattern)
+	if err != nil {
+		return nil, err
+	}
+
+	return &StarlarkGlob{glob}, nil
 }
 
 func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {

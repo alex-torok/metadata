@@ -8,7 +8,8 @@ import (
 )
 
 type Glob struct {
-	re *regexp.Regexp
+	re      *regexp.Regexp
+	pattern string
 }
 
 func (g Glob) Match(str string) bool {
@@ -29,7 +30,8 @@ func NewGlob(pattern string) (*Glob, error) {
 		return nil, err
 	}
 	return &Glob{
-		re: re,
+		re:      re,
+		pattern: pattern,
 	}, nil
 }
 
