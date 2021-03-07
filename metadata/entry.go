@@ -13,6 +13,29 @@ func (s StringSet) Contains(val string) bool {
 	return ok
 }
 
+type FileMatchSet struct {
+	exactMatches   StringSet
+	patternMatches []*Glob
+}
+
+func (f FileMatchSet) Matches(val string) bool {
+	if f.exactMatches.Contains(val) {
+		return true
+	}
+
+	for _, p := range f.patternMatches {
+		if p.Match(val) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (f FileMatchSet) IsEmpty() bool {
+	return len(f.exactMatches) == 0 && len(f.patternMatches) == 0
+}
+
 type Entry struct {
 	key   string
 	value starlark.Value
@@ -20,5 +43,5 @@ type Entry struct {
 	// files that this metadata entry applies to. If empty, apply to all files
 	// this contains the full path relative to the root of the repo of any files
 	// that match
-	fileMatchSet StringSet
+	fileMatchSet *FileMatchSet
 }

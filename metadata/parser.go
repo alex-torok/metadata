@@ -163,8 +163,9 @@ func init() {
 	}
 }
 
-func handleFilesArg(filesArg starlark.Value, relativeDir string) (StringSet, error) {
-	fileMatchSet := make(StringSet)
+func handleFilesArg(filesArg starlark.Value, relativeDir string) (*FileMatchSet, error) {
+	exactMatchSet := make(StringSet)
+	globList := make([]*Glob, 0)
 	if filesArg != nil {
 		if filesArg.Type() != "list" {
 			return nil, errors.New("files must be of list type")
@@ -173,20 +174,29 @@ func handleFilesArg(filesArg starlark.Value, relativeDir string) (StringSet, err
 		asList := filesArg.(*starlark.List)
 		for i := 0; i < asList.Len(); i++ {
 			val := asList.Index(i)
-			if val.Type() != "string" {
-				return nil, errors.New("Only string types are allowed for the files arg")
-			}
-			// TODO: ban relative pathing up like ./../some_other
-
+			switch val := val.(type) {
 			// TODO: this is a bit sloppy to get the full path to the file
 			// relative to the current metadata file.
 			// There be dragons if:
 			//   1. Someone `load`s another METADATA file
 			//   2. we have lots of file patterns, this will use lots of memory
-			fileMatchSet.Add(filepath.Join(relativeDir, val.(starlark.String).GoString()))
+			case starlark.String:
+				// TODO: ban relative pathing up like ./../some_other
+				exactMatchSet.Add(filepath.Join(relativeDir, val.GoString()))
+			case *StarlarkGlob:
+				// TODO: fix pattern to match relative to metadata file
+				globList = append(globList, val.impl)
+			default:
+				return nil, errors.New("Only string and glob types are allowed for the files arg")
+			}
+
 		}
 	}
-	return fileMatchSet, nil
+
+	return &FileMatchSet{
+		exactMatches:   exactMatchSet,
+		patternMatches: globList,
+	}, nil
 }
 
 //TODO: Make thread safe
