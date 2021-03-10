@@ -80,3 +80,24 @@ func TestFileListMetadataTree(t *testing.T) {
 	assert.Nil(t, value)
 	assert.Error(t, err)
 }
+
+func TestGlobMetadataTree(t *testing.T) {
+	fullPath := "../test_data/limit_with_globs"
+	tree, err := TreeFromDir(fullPath, "METADATA")
+	if err != nil {
+		require.NoError(t, err, "Unexpected error")
+	}
+
+	value, err := tree.GetClosestValue("main.cc", "minimum_coverage")
+	require.NoError(t, err)
+	assert.Equal(t, value, starlark.MakeInt(90))
+
+	value, err = tree.GetClosestValue("other.py", "minimum_coverage")
+	require.NoError(t, err)
+	assert.Equal(t, value, starlark.MakeInt(90))
+
+	value, err = tree.GetClosestValue("one/other.cc", "cool_factor")
+	require.NoError(t, err)
+	assert.Equal(t, value, starlark.MakeInt(100))
+
+}

@@ -1,5 +1,3 @@
-* Specifying glob patterns that metdata applies to
-
 * Ban calling `load` on a METADATA file
 * Clean up global cache to be in the parser
 * Ban defining metadata in a loaded module (maybe implement a load stack?)

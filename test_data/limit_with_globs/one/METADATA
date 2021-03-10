@@ -1,0 +1,7 @@
+metadata(
+  key="cool_factor",
+  value=100,
+  files=[
+    glob("*.cc"),
+    ]
+  )
