@@ -3,6 +3,7 @@ package metadata
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -17,9 +18,15 @@ func (g Glob) Match(str string) bool {
 }
 
 func NewGlob(pattern string) (*Glob, error) {
+	return NewGlobRelativeTo(pattern, "")
+}
+
+func NewGlobRelativeTo(pattern, moduleDir string) (*Glob, error) {
 	builder := strings.Builder{}
 
-	err := handleDoubleStars(&builder, pattern)
+	fullPattern := filepath.Join(moduleDir, pattern)
+
+	err := handleDoubleStars(&builder, fullPattern)
 	if err != nil {
 		return nil, err
 	}

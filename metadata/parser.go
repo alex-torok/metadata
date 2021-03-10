@@ -116,8 +116,7 @@ func glob_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starl
 		//TODO: Add some way to show the file name in this error?
 		return nil, err
 	}
-
-	glob, err := NewGlob(pattern)
+	glob, err := NewGlobRelativeTo(pattern, dirOfRelativePath(thread.Name))
 	if err != nil {
 		return nil, err
 	}

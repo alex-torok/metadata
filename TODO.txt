@@ -1,4 +1,4 @@
-* Specifying blob patterns that metdata applies to
+* Specifying glob patterns that metdata applies to
 
 * Ban calling `load` on a METADATA file
 * Clean up global cache to be in the parser
