@@ -101,3 +101,27 @@ func TestGlobMetadataTree(t *testing.T) {
 	assert.Equal(t, value, starlark.MakeInt(100))
 
 }
+
+func TestVerticalMergeMetadataTree(t *testing.T) {
+	fullPath := "../test_data/vertical_merge"
+	tree, err := TreeFromDir(fullPath, "METADATA")
+	if err != nil {
+		require.NoError(t, err, "Unexpected error")
+	}
+
+	assertIntValue := func(path, key string, expected int) {
+		value, err := tree.GetMergedValue(path, key)
+		require.NoError(t, err)
+		assert.Equal(t, value, starlark.MakeInt(expected), "Expected %s(%s) to be %d, but got %s", key, path, expected, value.String())
+	}
+
+	assertIntValue("main.cc", "minimum_coverage_take_lower", 80)
+	assertIntValue("main.cc", "minimum_coverage_take_upper", 80)
+
+	assertIntValue("one/main.cc", "minimum_coverage_take_lower", 90)
+	assertIntValue("one/main.cc", "minimum_coverage_take_upper", 80)
+
+	assertIntValue("one/two/main.cc", "minimum_coverage_take_lower", 100)
+	assertIntValue("one/two/main.cc", "minimum_coverage_take_upper", 80)
+
+}

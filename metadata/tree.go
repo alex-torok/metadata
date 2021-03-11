@@ -46,6 +46,26 @@ func (e NoMetadataFoundError) Error() string {
 	return fmt.Sprintf("No '%s' metadata found for '%s'", e.key, e.path)
 }
 
+func (m *MetadataTree) GetMergedValue(filePath string, metadataKey string) (starlark.Value, error) {
+	stack := m.getMetadataStack(filePath, metadataKey)
+	if len(stack) == 0 {
+		return nil, NoMetadataFoundError{filePath, metadataKey}
+	}
+
+	lowerValue := stack[len(stack)-1].value
+	for i := len(stack) - 2; i >= 0; i-- {
+		upper := stack[i]
+		upperValue := upper.value
+
+		var err error
+		lowerValue, err = upper.mergeVertically(upperValue, lowerValue)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return lowerValue, nil
+}
+
 func (m *MetadataTree) GetClosestValue(filePath string, metadataKey string) (starlark.Value, error) {
 	stack := m.getMetadataStack(filePath, metadataKey)
 	if len(stack) == 0 {

@@ -36,6 +36,8 @@ func (f FileMatchSet) IsEmpty() bool {
 	return len(f.exactMatches) == 0 && len(f.patternMatches) == 0
 }
 
+type VerticalMergeFunc func(upper, lower starlark.Value) (starlark.Value, error)
+
 type Entry struct {
 	key   string
 	value starlark.Value
@@ -43,5 +45,6 @@ type Entry struct {
 	// files that this metadata entry applies to. If empty, apply to all files
 	// this contains the full path relative to the root of the repo of any files
 	// that match
-	fileMatchSet *FileMatchSet
+	fileMatchSet    *FileMatchSet
+	mergeVertically VerticalMergeFunc
 }

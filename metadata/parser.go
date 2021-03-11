@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -95,6 +96,7 @@ func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.S
 	}
 
 	predeclared := starlark.StringDict{
+		"meta":     starlark.NewBuiltin("meta", meta_new_starlark_func),
 		"metadata": starlark.NewBuiltin("metadata", metadata_starlark_func),
 		"glob":     starlark.NewBuiltin("glob", glob_starlark_func),
 	}
@@ -105,6 +107,49 @@ func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.S
 	p.cache[path] = result
 
 	return result.globals, result.err
+}
+
+func meta_new_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+
+	var verticalMergeFunc starlark.Callable
+	var key string
+
+	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
+		"vertical_merge", &verticalMergeFunc,
+		"key", &key,
+	); err != nil {
+		//TODO: Add some way to show the file name in this error?
+		return nil, err
+	}
+
+	returnFunc := starlark.NewBuiltin("metadata", func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+
+		var value starlark.Value
+		var filesArg starlark.Value
+		if err := starlark.UnpackArgs(b.Name(), args, kwargs,
+			"value", &value,
+			"files?", &filesArg,
+		); err != nil {
+			return nil, err
+		}
+
+		fileMatchSet, err := handleFilesArg(filesArg, dirOfRelativePath(thread.Name))
+		if err != nil {
+			return nil, err
+		}
+
+		entry := Entry{
+			key:             key,
+			value:           value,
+			fileMatchSet:    fileMatchSet,
+			mergeVertically: newVerticalMerger(verticalMergeFunc),
+		}
+
+		globalMetadataStore.addEntry(thread.Name, entry)
+		return starlark.None, nil
+	})
+
+	return returnFunc, nil
 }
 
 func glob_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
@@ -216,4 +261,20 @@ func (m *metadataStore) addEntry(path string, entry Entry) {
 
 func (m *metadataStore) get(path string) []Entry {
 	return m.store[path]
+}
+
+func newVerticalMerger(starVertMerge starlark.Callable) VerticalMergeFunc {
+	return func(upper, lower starlark.Value) (starlark.Value, error) {
+
+		thread := &starlark.Thread{
+			Name: "Vertically Merging",
+		}
+		args := []starlark.Value{upper, lower}
+		res, err := starlark.Call(thread, starVertMerge, args, []starlark.Tuple{})
+		if err != nil {
+			return nil, fmt.Errorf("Could not vertically merge upper(%v) and lower(%v): %v", upper, lower, err)
+		}
+
+		return res, nil
+	}
 }
