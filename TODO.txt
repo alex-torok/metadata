@@ -1,8 +1,29 @@
-* Ban calling `load` on a METADATA file
-* Ban defining metadata in a loaded module (maybe implement a load stack?)
-* Better abstraction for "what METADATA file am I in"
+* Implement a global metadata type store that can keep track of metadata types (key, horizMergeFunc, vertMergeFunc, anything else that gets passed to the "meta" function to create metadata generation functions)
 
-* Implement CLI interface for pulling metadata values out in json
-* In meta builder function, the merge function could have a "takeMostSpecificButMergeOthersWith"
+== Anti Foot-gun ==
+* Ban calling `load` on a METADATA file
+* Ban defining metadata entries in a loaded module (maybe implement a load stack where entries can only be defined in the first layer?)
+* Ban defining metadata types outside of a loaded module
+
+== User Experience ==
+* Better error messages that include file/line numbers
 * Store file/line number definitions for where metadata values are defined in the Entry
+
+== Querying Data Out ==
+* Implement CLI interface for pulling metadata values out in json
+* Validate tree (can we merge on every file in the git repo)
+* Get all files with 
+
+== Correctness ==
+* Freeze all incoming metadata values so that merge funcs can't change them
 * When defining custom metadata, define the type of the value
+
+== Internal Improvements ==
+* In the parser, a better abstraction for "what METADATA file am I in" - thread.name won't scale
+* Globbing with the full path is kinda sloppy, maybe implement a path component globber. Maybe split the glob pattern into path components, and evaluate based on each component? Not sure. Need more performance data on a larger repo.
+
+== Performance ==
+* Logging (logrus)
+* Parallel loading of METADATA files (thread safe metadataStore in the parser)
+* Memoize horizontal merge results based on the entries being merged?
+* Memoize vertical merge results based on the upper/lower values?

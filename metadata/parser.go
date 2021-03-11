@@ -26,7 +26,6 @@ type Parser struct {
 }
 
 func NewParser(repo *Repo) Parser {
-	// TODO: move this metadata store into the parser itself
 	return Parser{
 		cache:         make(map[string]*execFileResult),
 		repo:          repo,
@@ -247,7 +246,6 @@ func newMetadataStore() metadataStore {
 	}
 }
 
-//TODO: Make thread safe
 type metadataStore struct {
 	store map[string][]Entry
 }

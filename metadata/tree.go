@@ -96,9 +96,9 @@ func (m *MetadataTree) getMetadataStack(filePath string, metadataKey string) []E
 	for _, dirPart := range strings.Split(filePath, string(filepath.Separator)) {
 		if entries, ok := currentTree.entryMap[metadataKey]; ok {
 			// TODO: Fix hacky hacky only taking the first entry
-			val := entries[0]
-			if val.fileMatchSet.IsEmpty() || val.fileMatchSet.Matches(filePath) {
-				stack = append(stack, val)
+			entry := entries[0]
+			if entry.isAppliedToFile(filePath) {
+				stack = append(stack, entry)
 			}
 		}
 		var nextSubtreeExists bool
@@ -137,7 +137,7 @@ func (m MetadataTree) resolveSiblingEntries(entries []Entry, filePath string, me
 	// Find all entries that match the given file
 	matchingEntries := make([]Entry, 0)
 	for _, entry := range entries {
-		if entry.fileMatchSet.IsEmpty() || entry.fileMatchSet.Matches(filePath) {
+		if entry.isAppliedToFile(filePath) {
 			matchingEntries = append(matchingEntries, entry)
 		}
 	}

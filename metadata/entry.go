@@ -51,3 +51,7 @@ type Entry struct {
 	mergeVertically   VerticalMergeFunc
 	mergeHorizontally HorizontalMergeFunc
 }
+
+func (e *Entry) isAppliedToFile(filePath string) bool {
+	return e.fileMatchSet.IsEmpty() || e.fileMatchSet.Matches(filePath)
+}
