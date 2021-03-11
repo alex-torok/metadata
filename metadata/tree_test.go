@@ -155,3 +155,41 @@ func TestHorizontalMergeMetadataTree(t *testing.T) {
 	)
 
 }
+
+func TestHorizontalAndVerticalMergeMetadataTree(t *testing.T) {
+	fullPath := "../test_data/horizontal_and_vertical_merge"
+	tree, err := TreeFromDir(fullPath, "METADATA")
+	if err != nil {
+		require.NoError(t, err, "Unexpected error")
+	}
+
+	value, err := tree.GetMergedValue("main.cc", "owners")
+	require.NoError(t, err)
+	assert.Equal(t,
+		starlark.NewList([]starlark.Value{
+			starlark.String("alice"),
+		}),
+		value,
+	)
+
+	value, err = tree.GetMergedValue("main.py", "owners")
+	require.NoError(t, err)
+	assert.Equal(t,
+		starlark.NewList([]starlark.Value{
+			starlark.String("alice"),
+			starlark.String("bob"),
+		}),
+		value,
+	)
+
+	value, err = tree.GetMergedValue("one/main.py", "owners")
+	require.NoError(t, err)
+	assert.Equal(t,
+		starlark.NewList([]starlark.Value{
+			starlark.String("carol"),
+			starlark.String("alice"),
+			starlark.String("bob"),
+		}),
+		value,
+	)
+}

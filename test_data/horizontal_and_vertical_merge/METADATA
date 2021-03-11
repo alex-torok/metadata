@@ -1,4 +1,11 @@
-load("//coverage.meta", "minimum_coverage_take_lower", "minimum_coverage_take_upper") 
+load("//owners.meta", "owners") 
 
-minimum_coverage_take_lower(80)
-minimum_coverage_take_upper(80)
+owners(["alice"])
+
+owners(
+    ["bob"],
+    files=[
+        glob("**/*.py"),
+        glob("*.py"),
+        ]
+)

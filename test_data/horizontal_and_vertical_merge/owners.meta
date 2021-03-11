@@ -1,0 +1,12 @@
+def _owners_horizontal_merge_impl(first, second):
+    return first + second
+
+def _owners_vertical_merge_impl(upper, lower):
+    return lower + upper
+
+
+owners = meta(
+    key="owners",
+    horizontal_merge=_owners_horizontal_merge_impl,
+    vertical_merge=_owners_vertical_merge_impl,
+) 

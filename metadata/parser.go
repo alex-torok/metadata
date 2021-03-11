@@ -25,6 +25,7 @@ type Parser struct {
 }
 
 func NewParser(repo *Repo) Parser {
+	// TODO: move this metadata store into the parser itself
 	resetGlobalMetadata()
 	return Parser{
 		cache: make(map[string]*execFileResult),

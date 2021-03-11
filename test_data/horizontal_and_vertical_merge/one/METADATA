@@ -1,4 +1,3 @@
-load("//coverage.meta", "minimum_coverage_take_lower", "minimum_coverage_take_upper") 
+load("//owners.meta", "owners")
 
-minimum_coverage_take_lower(90)
-minimum_coverage_take_upper(90)
+owners(["carol"])
