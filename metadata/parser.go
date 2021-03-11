@@ -20,16 +20,17 @@ type execFileResult struct {
 }
 
 type Parser struct {
-	cache map[string]*execFileResult
-	repo  *Repo
+	cache         map[string]*execFileResult
+	repo          *Repo
+	metadataStore metadataStore
 }
 
 func NewParser(repo *Repo) Parser {
 	// TODO: move this metadata store into the parser itself
-	resetGlobalMetadata()
 	return Parser{
-		cache: make(map[string]*execFileResult),
-		repo:  repo,
+		cache:         make(map[string]*execFileResult),
+		repo:          repo,
+		metadataStore: newMetadataStore(),
 	}
 }
 
@@ -54,7 +55,7 @@ func (p *Parser) ParseOne(file MetadataFile) (ParseResult, error) {
 
 	return ParseResult{
 		file:    file,
-		entries: globalMetadataStore.get(file.pathRelativeToRoot),
+		entries: p.metadataStore.get(file.pathRelativeToRoot),
 		//entries: globalMetadataStore.get(file.pathRelativeToRoot),
 	}, nil
 }
@@ -98,8 +99,8 @@ func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.S
 	}
 
 	predeclared := starlark.StringDict{
-		"meta":     starlark.NewBuiltin("meta", meta_new_starlark_func),
-		"metadata": starlark.NewBuiltin("metadata", metadata_starlark_func),
+		"meta":     starlark.NewBuiltin("meta", p.meta_new_starlark_func),
+		"metadata": starlark.NewBuiltin("metadata", p.metadata_starlark_func),
 		"glob":     starlark.NewBuiltin("glob", glob_starlark_func),
 	}
 
@@ -111,7 +112,7 @@ func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.S
 	return result.globals, result.err
 }
 
-func meta_new_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+func (p *Parser) meta_new_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 
 	var verticalMergeFunc starlark.Callable
 	var horizontalMergeFunc starlark.Callable
@@ -150,7 +151,7 @@ func meta_new_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args s
 			mergeHorizontally: newHorizontalMerger(horizontalMergeFunc),
 		}
 
-		globalMetadataStore.addEntry(thread.Name, entry)
+		p.metadataStore.addEntry(thread.Name, entry)
 		return starlark.None, nil
 	})
 
@@ -174,7 +175,7 @@ func glob_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starl
 	return &StarlarkGlob{glob}, nil
 }
 
-func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+func (p *Parser) metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 
 	var key string
 	var value starlark.Value
@@ -199,21 +200,9 @@ func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args s
 		fileMatchSet: fileMatchSet,
 	}
 
-	globalMetadataStore.addEntry(thread.Name, entry)
+	p.metadataStore.addEntry(thread.Name, entry)
 
 	return starlark.None, nil
-}
-
-var globalMetadataStore metadataStore
-
-func resetGlobalMetadata() {
-	globalMetadataStore = metadataStore{
-		store: make(map[string][]Entry),
-	}
-}
-
-func init() {
-	resetGlobalMetadata()
 }
 
 func handleFilesArg(filesArg starlark.Value, relativeDir string) (*FileMatchSet, error) {
@@ -250,6 +239,12 @@ func handleFilesArg(filesArg starlark.Value, relativeDir string) (*FileMatchSet,
 		exactMatches:   exactMatchSet,
 		patternMatches: globList,
 	}, nil
+}
+
+func newMetadataStore() metadataStore {
+	return metadataStore{
+		store: make(map[string][]Entry),
+	}
 }
 
 //TODO: Make thread safe
