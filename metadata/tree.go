@@ -34,7 +34,7 @@ func TreeFromDir(root, metadataFilename string) (*MetadataTree, error) {
 type MetadataTree struct {
 	subTrees map[string]*MetadataTree
 	entries  []Entry
-	entryMap map[string]Entry
+	entryMap map[string][]Entry
 }
 
 type NoMetadataFoundError struct {
@@ -46,19 +46,33 @@ func (e NoMetadataFoundError) Error() string {
 	return fmt.Sprintf("No '%s' metadata found for '%s'", e.key, e.path)
 }
 
+// GetMergedValue - get the value of a particular metadata type for a file
+// merge the values with any upper values
 func (m *MetadataTree) GetMergedValue(filePath string, metadataKey string) (starlark.Value, error) {
-	stack := m.getMetadataStack(filePath, metadataKey)
-	if len(stack) == 0 {
+	metStack := m.getMetadataStack(filePath, metadataKey)
+	if len(metStack) == 0 {
+		return nil, NoMetadataFoundError{filePath, metadataKey}
+	}
+	// TODO: Implement a metadata type store that can hold these functions
+	vertMergeFunc := metStack[0].mergeVertically
+
+	valueStack, err := m.getValueStack(filePath, metadataKey)
+	if err != nil {
+		return nil, err
+	} else if len(valueStack) == 0 {
 		return nil, NoMetadataFoundError{filePath, metadataKey}
 	}
 
-	lowerValue := stack[len(stack)-1].value
+	return mergeVerticalStack(valueStack, vertMergeFunc)
+}
+
+func mergeVerticalStack(stack []starlark.Value, mergeFunc VerticalMergeFunc) (starlark.Value, error) {
+	lowerValue := stack[len(stack)-1]
 	for i := len(stack) - 2; i >= 0; i-- {
-		upper := stack[i]
-		upperValue := upper.value
+		upperValue := stack[i]
 
 		var err error
-		lowerValue, err = upper.mergeVertically(upperValue, lowerValue)
+		lowerValue, err = mergeFunc(upperValue, lowerValue)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +94,9 @@ func (m *MetadataTree) getMetadataStack(filePath string, metadataKey string) []E
 
 	currentTree := m
 	for _, dirPart := range strings.Split(filePath, string(filepath.Separator)) {
-		if val, ok := currentTree.entryMap[metadataKey]; ok {
+		if entries, ok := currentTree.entryMap[metadataKey]; ok {
+			// TODO: Fix hacky hacky only taking the first entry
+			val := entries[0]
 			if val.fileMatchSet.IsEmpty() || val.fileMatchSet.Matches(filePath) {
 				stack = append(stack, val)
 			}
@@ -93,6 +109,57 @@ func (m *MetadataTree) getMetadataStack(filePath string, metadataKey string) []E
 	}
 
 	return stack
+}
+
+func (m *MetadataTree) getValueStack(filePath string, metadataKey string) ([]starlark.Value, error) {
+	stack := make([]starlark.Value, 0)
+
+	currentTree := m
+	for _, dirPart := range strings.Split(filePath, string(filepath.Separator)) {
+		if entries, ok := currentTree.entryMap[metadataKey]; ok {
+			val, err := m.resolveSiblingEntries(entries, filePath, metadataKey)
+			if err != nil {
+				return nil, err
+			}
+			stack = append(stack, val)
+		}
+		var nextSubtreeExists bool
+		currentTree, nextSubtreeExists = currentTree.subTrees[dirPart]
+		if !nextSubtreeExists {
+			break
+		}
+	}
+
+	return stack, nil
+}
+
+func (m MetadataTree) resolveSiblingEntries(entries []Entry, filePath string, metadataKey string) (starlark.Value, error) {
+	// Find all entries that match the given file
+	matchingEntries := make([]Entry, 0)
+	for _, entry := range entries {
+		if entry.fileMatchSet.IsEmpty() || entry.fileMatchSet.Matches(filePath) {
+			matchingEntries = append(matchingEntries, entry)
+		}
+	}
+
+	if len(matchingEntries) == 0 {
+		return nil, NoMetadataFoundError{filePath, metadataKey}
+	}
+
+	// Merge the siblings
+	leftValue := matchingEntries[0].value
+	for i := 1; i < len(matchingEntries); i++ {
+		right := matchingEntries[i]
+		rightValue := right.value
+
+		var err error
+		leftValue, err = right.mergeHorizontally(leftValue, rightValue)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return leftValue, nil
 }
 
 func (m *MetadataTree) get(dirName string) *MetadataTree {
@@ -108,7 +175,7 @@ func newTree() *MetadataTree {
 	return &MetadataTree{
 		subTrees: make(map[string]*MetadataTree),
 		entries:  make([]Entry, 0),
-		entryMap: make(map[string]Entry),
+		entryMap: make(map[string][]Entry),
 	}
 }
 
@@ -128,7 +195,11 @@ func NewMetadataTree(results []ParseResult) *MetadataTree {
 		tree.entries = result.entries
 		for _, entry := range tree.entries {
 			//TODO: This overwrites any duplicated metadata entry key. Implement horizontal flattening.
-			tree.entryMap[entry.key] = entry
+			if prev, seen_key := tree.entryMap[entry.key]; seen_key {
+				tree.entryMap[entry.key] = append(prev, entry)
+			} else {
+				tree.entryMap[entry.key] = []Entry{entry}
+			}
 		}
 	}
 

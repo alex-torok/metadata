@@ -1,0 +1,16 @@
+def _min_cov_vertical_merge_impl_lower(upper, lower):
+    return lower
+
+minimum_coverage_take_lower = meta(
+    key="minimum_coverage_take_lower",
+    vertical_merge=_min_cov_vertical_merge_impl_lower
+) 
+
+def _min_cov_vertical_merge_impl_upper(upper, lower):
+    return upper
+    
+minimum_coverage_take_upper = meta(
+    key="minimum_coverage_take_upper",
+    vertical_merge=_min_cov_vertical_merge_impl_upper
+) 
+

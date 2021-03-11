@@ -1,0 +1,8 @@
+load("//owners.meta", "owners") 
+
+owners(["alice", "bob"])
+
+owners(
+    ["carol"],
+    files=[glob("*.py")]
+)

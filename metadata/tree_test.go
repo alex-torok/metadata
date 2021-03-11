@@ -60,7 +60,7 @@ func TestImportMetadataTree(t *testing.T) {
 		t.Run(tt.path+":"+tt.key, func(t *testing.T) {
 			value, err := tree.GetClosestValue(tt.path, tt.key)
 			require.NoError(t, err)
-			assert.Equal(t, value, starlark.MakeInt(tt.expected))
+			assert.Equal(t, starlark.MakeInt(tt.expected), value)
 		})
 	}
 }
@@ -123,5 +123,35 @@ func TestVerticalMergeMetadataTree(t *testing.T) {
 
 	assertIntValue("one/two/main.cc", "minimum_coverage_take_lower", 100)
 	assertIntValue("one/two/main.cc", "minimum_coverage_take_upper", 80)
+
+}
+
+func TestHorizontalMergeMetadataTree(t *testing.T) {
+	fullPath := "../test_data/horizontal_merge"
+	tree, err := TreeFromDir(fullPath, "METADATA")
+	if err != nil {
+		require.NoError(t, err, "Unexpected error")
+	}
+
+	value, err := tree.GetMergedValue("main.cc", "owners")
+	require.NoError(t, err)
+	assert.Equal(t,
+		starlark.NewList([]starlark.Value{
+			starlark.String("alice"),
+			starlark.String("bob"),
+		}),
+		value,
+	)
+
+	value, err = tree.GetMergedValue("main.py", "owners")
+	require.NoError(t, err)
+	assert.Equal(t,
+		starlark.NewList([]starlark.Value{
+			starlark.String("alice"),
+			starlark.String("bob"),
+			starlark.String("carol"),
+		}),
+		value,
+	)
 
 }

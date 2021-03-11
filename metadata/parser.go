@@ -112,10 +112,12 @@ func (p *Parser) starlarkLoadFunc(_ *starlark.Thread, module string) (starlark.S
 func meta_new_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 
 	var verticalMergeFunc starlark.Callable
+	var horizontalMergeFunc starlark.Callable
 	var key string
 
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-		"vertical_merge", &verticalMergeFunc,
+		"vertical_merge?", &verticalMergeFunc,
+		"horizontal_merge?", &horizontalMergeFunc,
 		"key", &key,
 	); err != nil {
 		//TODO: Add some way to show the file name in this error?
@@ -139,10 +141,11 @@ func meta_new_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args s
 		}
 
 		entry := Entry{
-			key:             key,
-			value:           value,
-			fileMatchSet:    fileMatchSet,
-			mergeVertically: newVerticalMerger(verticalMergeFunc),
+			key:               key,
+			value:             value,
+			fileMatchSet:      fileMatchSet,
+			mergeVertically:   newVerticalMerger(verticalMergeFunc),
+			mergeHorizontally: newHorizontalMerger(horizontalMergeFunc),
 		}
 
 		globalMetadataStore.addEntry(thread.Name, entry)
@@ -263,16 +266,38 @@ func (m *metadataStore) get(path string) []Entry {
 	return m.store[path]
 }
 
-func newVerticalMerger(starVertMerge starlark.Callable) VerticalMergeFunc {
+func newVerticalMerger(vertMergeFunc starlark.Callable) VerticalMergeFunc {
 	return func(upper, lower starlark.Value) (starlark.Value, error) {
+		if vertMergeFunc == nil {
+			return nil, fmt.Errorf("Cannot merge vertically. No vertical merge function defined for this metadata type")
+		}
 
 		thread := &starlark.Thread{
 			Name: "Vertically Merging",
 		}
 		args := []starlark.Value{upper, lower}
-		res, err := starlark.Call(thread, starVertMerge, args, []starlark.Tuple{})
+		res, err := starlark.Call(thread, vertMergeFunc, args, []starlark.Tuple{})
 		if err != nil {
 			return nil, fmt.Errorf("Could not vertically merge upper(%v) and lower(%v): %v", upper, lower, err)
+		}
+
+		return res, nil
+	}
+}
+
+func newHorizontalMerger(horizMergeFunc starlark.Callable) HorizontalMergeFunc {
+	return func(left, right starlark.Value) (starlark.Value, error) {
+		if horizMergeFunc == nil {
+			return nil, fmt.Errorf("Cannot merge horizontally. No horizontal merge function defined for this metadata type")
+		}
+
+		thread := &starlark.Thread{
+			Name: "Vertically Merging",
+		}
+		args := []starlark.Value{left, right}
+		res, err := starlark.Call(thread, horizMergeFunc, args, []starlark.Tuple{})
+		if err != nil {
+			return nil, fmt.Errorf("Could not horizontally merge left(%v) and right(%v): %v", left, right, err)
 		}
 
 		return res, nil

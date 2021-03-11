@@ -1,0 +1,4 @@
+load("//coverage.meta", "minimum_coverage_take_lower", "minimum_coverage_take_upper") 
+
+minimum_coverage_take_lower(90)
+minimum_coverage_take_upper(90)
