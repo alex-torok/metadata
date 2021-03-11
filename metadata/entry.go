@@ -37,7 +37,7 @@ func (f FileMatchSet) IsEmpty() bool {
 }
 
 type VerticalMergeFunc func(upper, lower starlark.Value) (starlark.Value, error)
-type HorizontalMergeFunc func(upper, lower starlark.Value) (starlark.Value, error)
+type HorizontalMergeFunc func(left, right starlark.Value) (starlark.Value, error)
 
 // TODO: add "applies to file" function
 type Entry struct {
