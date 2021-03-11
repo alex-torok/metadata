@@ -25,6 +25,7 @@ type Parser struct {
 }
 
 func NewParser(repo *Repo) Parser {
+	resetGlobalMetadata()
 	return Parser{
 		cache: make(map[string]*execFileResult),
 		repo:  repo,
@@ -204,10 +205,14 @@ func metadata_starlark_func(thread *starlark.Thread, b *starlark.Builtin, args s
 
 var globalMetadataStore metadataStore
 
-func init() {
+func resetGlobalMetadata() {
 	globalMetadataStore = metadataStore{
 		store: make(map[string][]Entry),
 	}
+}
+
+func init() {
+	resetGlobalMetadata()
 }
 
 func handleFilesArg(filesArg starlark.Value, relativeDir string) (*FileMatchSet, error) {
