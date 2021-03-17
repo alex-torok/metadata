@@ -193,3 +193,15 @@ func TestHorizontalAndVerticalMergeMetadataTree(t *testing.T) {
 		value,
 	)
 }
+
+// func TestJsonExport(t *testing.T) {
+// 	fullPath := "../test_data/json_export"
+// 	tree, err := TreeFromDir(fullPath, "METADATA")
+// 	if err != nil {
+// 		require.NoError(t, err, "Unexpected error")
+// 	}
+
+// 	value, err := tree.GetMergedValue("one.txt", "key")
+// 	require.NoError(t, err)
+// 	assert.Equal(t, "[1,2,3]", ValueToJson(value))
+// }
