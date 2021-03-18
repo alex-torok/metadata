@@ -3,16 +3,22 @@
 == Anti Foot-gun ==
 * Ban calling `load` on a METADATA file
 * Ban defining metadata entries in a loaded module (maybe implement a load stack where entries can only be defined in the first layer?)
-* Ban defining metadata types outside of a loaded module
+* Ban defining metadata types outside of a loaded *.meta file
 
 == User Experience ==
 * Better error messages that include file/line numbers
 * Store file/line number definitions for where metadata values are defined in the Entry
 
-== Querying Data Out ==
-* Implement CLI interface for pulling metadata values out in json
-* Validate tree (can we merge on every file in the git repo)
-* Get all files with 
+== CLI ==
+* "get one" command that returns a single value as json
+* "get multi" that takes in a list of files and returns all values for one key.
+  * Files can come from stdin if given --stdin or as args
+* root command
+  * --repo-root flag, otherwise default to git root
+  * --verbose for logging
+* Dump metadata for all files - json dump of map[file]map[key]value
+* Validate tree (can we merge on every file in the git repo, globs match at least one, exact file matches exist)
+* "list matching" to list files with matching value (provide value as json?)
 
 == Correctness ==
 * Freeze all incoming metadata values so that merge funcs can't change them
@@ -24,6 +30,9 @@
 
 == Performance ==
 * Logging (logrus)
+* Lazy Glob loading
 * Parallel loading of METADATA files (thread safe metadataStore in the parser)
 * Memoize horizontal merge results based on the entries being merged?
 * Memoize vertical merge results based on the upper/lower values?
+* Performance testing that creates a huge tree of METADATA files and runs some commands over it
+* Memoize glob results when validating the whole tree
