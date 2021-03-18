@@ -10,6 +10,10 @@ import (
 
 func TestValueToJson(t *testing.T) {
 
+	makeTuple := func(vals ...starlark.Value) starlark.Tuple {
+		return vals
+	}
+
 	makeList := func(vals ...starlark.Value) starlark.Value {
 		return starlark.NewList(vals)
 	}
@@ -40,6 +44,11 @@ func TestValueToJson(t *testing.T) {
 			require.NoError(t, s.Insert(starlark.MakeInt(15)))
 			return s
 		}(), "[5,10,15]", false},
+		{"int tuple",
+			makeTuple(
+				starlark.MakeInt(1),
+				starlark.MakeInt(2),
+				starlark.MakeInt(42)), "[1,2,42]", false},
 		{"int list",
 			makeList(
 				starlark.MakeInt(1),

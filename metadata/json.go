@@ -30,7 +30,7 @@ func ValueToGoType(v starlark.Value) (interface{}, error) {
 			return nil, fmt.Errorf("Cannot cast %v to int64", v)
 		}
 		return i, nil
-	case "set", "list":
+	case "set", "list", "tuple":
 		seq := v.(starlark.Sequence)
 		vals := make([]interface{}, seq.Len())
 		iter := seq.Iterate()
@@ -67,6 +67,7 @@ func ValueToGoType(v starlark.Value) (interface{}, error) {
 		}
 
 		return goMap, nil
+	default:
+		return "", fmt.Errorf("Do not know how to convert %v", v)
 	}
-	return "", nil
 }
