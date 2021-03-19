@@ -9,6 +9,20 @@ import (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+func FileMapToJson(fileMap map[string]starlark.Value) (string, error) {
+	genericMap := make(map[string]interface{})
+	for file, starlarkValue := range fileMap {
+		goValue, err := ValueToGoType(starlarkValue)
+		if err != nil {
+			return "", fmt.Errorf("Cannot convert entry for file '%s' to go type: %v", file, err)
+		}
+		genericMap[file] = goValue
+	}
+
+	b, err := json.Marshal(genericMap)
+	return string(b), err
+}
+
 func ValueToJson(starlarkVal starlark.Value) (string, error) {
 	goVal, err := ValueToGoType(starlarkVal)
 	if err != nil {
