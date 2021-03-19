@@ -10,7 +10,7 @@ import (
 
 func TestSimpleMetadataTree(t *testing.T) {
 	fullPath := "../test_data/simple_test_case"
-	tree, err := TreeFromDir(fullPath, "METADATA")
+	tree, err := NewEagerTree(fullPath, "METADATA")
 	if err != nil {
 		require.NoError(t, err, "Unexpected error")
 	}
@@ -42,7 +42,7 @@ func TestSimpleMetadataTree(t *testing.T) {
 
 func TestImportMetadataTree(t *testing.T) {
 	fullPath := "../test_data/import_file"
-	tree, err := TreeFromDir(fullPath, "METADATA")
+	tree, err := NewEagerTree(fullPath, "METADATA")
 	if err != nil {
 		require.NoError(t, err, "Unexpected error")
 	}
@@ -67,7 +67,7 @@ func TestImportMetadataTree(t *testing.T) {
 
 func TestFileListMetadataTree(t *testing.T) {
 	fullPath := "../test_data/limit_with_file_list"
-	tree, err := TreeFromDir(fullPath, "METADATA")
+	tree, err := NewEagerTree(fullPath, "METADATA")
 	if err != nil {
 		require.NoError(t, err, "Unexpected error")
 	}
@@ -83,7 +83,7 @@ func TestFileListMetadataTree(t *testing.T) {
 
 func TestGlobMetadataTree(t *testing.T) {
 	fullPath := "../test_data/limit_with_globs"
-	tree, err := TreeFromDir(fullPath, "METADATA")
+	tree, err := NewEagerTree(fullPath, "METADATA")
 	if err != nil {
 		require.NoError(t, err, "Unexpected error")
 	}
@@ -104,7 +104,7 @@ func TestGlobMetadataTree(t *testing.T) {
 
 func TestVerticalMergeMetadataTree(t *testing.T) {
 	fullPath := "../test_data/vertical_merge"
-	tree, err := TreeFromDir(fullPath, "METADATA")
+	tree, err := NewEagerTree(fullPath, "METADATA")
 	if err != nil {
 		require.NoError(t, err, "Unexpected error")
 	}
@@ -128,7 +128,7 @@ func TestVerticalMergeMetadataTree(t *testing.T) {
 
 func TestHorizontalMergeMetadataTree(t *testing.T) {
 	fullPath := "../test_data/horizontal_merge"
-	tree, err := TreeFromDir(fullPath, "METADATA")
+	tree, err := NewEagerTree(fullPath, "METADATA")
 	if err != nil {
 		require.NoError(t, err, "Unexpected error")
 	}
@@ -158,7 +158,7 @@ func TestHorizontalMergeMetadataTree(t *testing.T) {
 
 func TestHorizontalAndVerticalMergeMetadataTree(t *testing.T) {
 	fullPath := "../test_data/horizontal_and_vertical_merge"
-	tree, err := TreeFromDir(fullPath, "METADATA")
+	tree, err := NewEagerTree(fullPath, "METADATA")
 	if err != nil {
 		require.NoError(t, err, "Unexpected error")
 	}
@@ -196,7 +196,7 @@ func TestHorizontalAndVerticalMergeMetadataTree(t *testing.T) {
 
 // func TestJsonExport(t *testing.T) {
 // 	fullPath := "../test_data/json_export"
-// 	tree, err := TreeFromDir(fullPath, "METADATA")
+// 	tree, err := NewEagerTree(fullPath, "METADATA")
 // 	if err != nil {
 // 		require.NoError(t, err, "Unexpected error")
 // 	}

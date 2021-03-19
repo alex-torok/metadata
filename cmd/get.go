@@ -21,7 +21,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 	file := args[1]
 	key := args[2]
 
-	tree, err := metadata.TreeFromDir(repoRoot, "METADATA")
+	tree, err := metadata.NewEagerTree(repoRoot, "METADATA")
 	if err != nil {
 		fmt.Fprintln(cmd.ErrOrStderr(), err)
 		os.Exit(1)

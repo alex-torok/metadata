@@ -8,7 +8,7 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func TreeFromDir(root, metadataFilename string) (*MetadataTree, error) {
+func NewEagerTree(root, metadataFilename string) (*MetadataTree, error) {
 	r := Repo{
 		Root:             root,
 		MetadataFilename: metadataFilename,
