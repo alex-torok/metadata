@@ -1,4 +1,4 @@
-module metadata
+module github.com/alex-torok/metadata
 
 go 1.15
 
